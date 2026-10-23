@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nikki. 一本自己的小手账</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#C94F42">
+<style>
+  :root{
+    --paper:#FAF6EE; --paper-deep:#F3EDDF; --ink:#2E2A26; --ink-soft:#8A8378;
+    --red:#C94F42; --red-soft:#E8B5AE; --green:#7C9A6D; --line:#E4DCCB;
+    --shadow:0 10px 30px rgba(46,42,38,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{font-size:16px}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--paper-deep);color:var(--ink);min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea{font-family:inherit;color:var(--ink)}
+  small{color:var(--ink-soft)}
+  .wrap{max-width:420px;margin:0 auto;padding:18px 18px 60px}
+
+  /* ---------- 封面 ---------- */
+  #cover{display:none;flex-direction:column;align-items:center;padding-top:7vh;animation:fadein .5s}
+  #cover.on{display:flex}
+  .book{
+    width:250px;height:365px;border-radius:6px 14px 14px 6px;position:relative;
+    background:linear-gradient(160deg,#FBF8F1 0%,#F4EEE0 100%);
+    box-shadow:var(--shadow), inset 4px 0 0 rgba(201,79,66,.9), inset 5px 0 0 rgba(255,255,255,.6);
+    border:1px solid #E7DFCE;
+    display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+    padding:30px 22px 26px;cursor:pointer;
+    transition:transform .25s;
+  }
+  .book:active{transform:scale(.98)}
+  .book .stitle{font-size:30px;font-weight:900;letter-spacing:.5px}
+  .book .stitle i{font-style:normal;color:var(--red)}
+  .book .ssub{font-size:12.5px;color:var(--ink-soft);letter-spacing:2px}
+  .book .stamp{
+    width:64px;height:64px;border-radius:50%;border:2.5px solid var(--red);color:var(--red);
+    display:flex;align-items:center;justify-content:center;font-size:26px;transform:rotate(-8deg);
+    opacity:.85;
+  }
+  .book .strap{font-size:10.5px;color:var(--ink-soft);text-align:center;line-height:1.7}
+  .book .rope{position:absolute;top:-6px;right:34px;width:3px;height:52px;background:var(--red);border-radius:2px;box-shadow:0 2px 4px rgba(0,0,0,.15)}
+  .openhint{margin-top:26px;font-size:14px;color:var(--ink-soft);animation:breathe 2.2s infinite}
+  @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+
+  /* ---------- 顶栏 ---------- */
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  header .logo{font-size:21px;font-weight:900}
+  header .logo i{font-style:normal;color:var(--red)}
+  header .cal-btn{font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;background:var(--ink);color:#fff}
+
+  /* ---------- 月历 ---------- */
+  .calcard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px 16px}
+  .mrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .mrow .mon{font-size:22px;font-weight:900}
+  .mrow .mon small{font-size:12px;font-weight:600;margin-left:6px}
+  .nav{display:flex;gap:8px}
+  .nav button{width:34px;height:34px;border-radius:10px;background:var(--paper);border:1px solid var(--line);font-size:15px;color:var(--ink)}
+  .wrow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--ink-soft);margin-bottom:6px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .day{
+    aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:15px;font-weight:700;position:relative;color:var(--ink);
+  }
+  .day.blank{pointer-events:none}
+  .day .dot{position:absolute;bottom:5px;width:5.5px;height:5.5px;border-radius:50%}
+  .day.today{outline:2px solid var(--red);outline-offset:-2px}
+  .day.written{background:var(--paper)}
+  .day:active{transform:scale(.94)}
+  .mstat{margin-top:14px;display:flex;gap:8px}
+  .mstat .st{flex:1;background:var(--paper);border-radius:12px;padding:10px;text-align:center}
+  .mstat .st b{display:block;font-size:19px}
+  .mstat .st small{font-size:10.5px}
+
+  /* ---------- 日页 ---------- */
+  .daycard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .dayhead{padding:20px 20px 14px;border-bottom:1px dashed var(--line);display:flex;align-items:flex-end;justify-content:space-between}
+  .dayhead .big{font-size:46px;font-weight:900;line-height:1;letter-spacing:-1px}
+  .dayhead .big small{font-size:15px;font-weight:800;margin-left:4px;color:var(--ink-soft)}
+  .dayhead .wk{font-size:13px;color:var(--ink-soft);font-weight:600}
+  .daybody{padding:18px 20px 22px}
+  .lbl{font-size:12px;font-weight:800;color:var(--ink-soft);letter-spacing:1.5px;margin-bottom:10px}
+  .moods{display:flex;justify-content:space-between;margin-bottom:20px}
+  .mood{width:52px;height:52px;border-radius:14px;font-size:25px;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1.5px solid transparent}
+  .mood.on{border-color:var(--red);background:#FDF3F0;transform:scale(1.08)}
+  .mood:active{transform:scale(.94)}
+  .paper-area{position:relative;margin-bottom:20px}
+  textarea{
+    width:100%;min-height:190px;resize:vertical;font-size:16px;line-height:32px;border:none;outline:none;background:none;
+    background-image:repeating-linear-gradient(180deg,transparent 0 31px,var(--line) 31px 32px);
+    padding:0;
+  }
+  textarea::placeholder{color:#C7BFB0}
+  .things{margin-bottom:20px}
+  .things input{
+    width:100%;font-size:16px;border:none;outline:none;background:none;
+    border-bottom:1.5px dashed var(--line);padding:9px 2px;margin-bottom:2px;
+  }
+  .things input::placeholder{color:#C7BFB0}
+  .things input:focus{border-bottom-color:var(--red)}
+  .dayfoot{display:flex;align-items:center;justify-content:space-between}
+  .savehint{font-size:12px;color:var(--ink-soft)}
+  .flip{display:flex;gap:8px}
+  .flip button{width:42px;height:42px;border-radius:12px;background:var(--paper);border:1px solid var(--line);font-size:17px}
+  .flip .home{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* ---------- 杂项 ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:38px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;padding:10px 20px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:all .3s;z-index:99;white-space:nowrap;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .view{display:none}.view.on{display:block;animation:fadein .3s}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 封面 -->
+  <div id="cover" class="view on">
+    <div class="book" id="openBook" role="button" aria-label="翻开手账">
+      <span class="rope"></span>
+      <div class="ssub">PERSONAL JOURNAL</div>
+      <div class="stitle">nikki<i>.</i></div>
+      <div class="stamp">🍅</div>
+      <div class="ssub" style="letter-spacing:1px">一本自己的小手账</div>
+      <div class="strap">写下的都留得住<br>——不用写得好看，写了就算数</div>
+    </div>
+    <div class="openhint">翻开它 →</div>
+  </div>
+
+  <!-- 月历 -->
+  <div id="cal" class="view">
+    <header>
+      <div class="logo">nikki<i>.</i></div>
+      <button class="cal-btn" id="btnToday">写今天</button>
+    </header>
+    <div class="calcard">
+      <div class="mrow">
+        <div class="mon" id="monTitle">10月 <small>2026</small></div>
+        <div class="nav">
+          <button id="prevM" aria-label="上个月">‹</button>
+          <button id="nextM" aria-label="下个月">›</button>
+        </div>
+      </div>
+      <div class="wrow"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+      <div class="grid" id="grid"></div>
+      <div class="mstat">
+        <div class="st"><b id="stDays">0</b><small>这个月写了</small></div>
+        <div class="st"><b id="stStreak">0</b><small>连续天数</small></div>
+        <div class="st"><b id="stMood">–</b><small>本月心情</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日页 -->
+  <div id="day" class="view">
+    <header>
+      <div class="logo">nikki<i>.</i></div>
+      <button class="cal-btn" id="btnBack">月历</button>
+    </header>
+    <div class="daycard">
+      <div class="dayhead">
+        <div class="big" id="dBig">23<small>日</small></div>
+        <div class="wk" id="dWk">星期五 · 10月</div>
+      </div>
+      <div class="daybody">
+        <div class="lbl">今天的心情</div>
+        <div class="moods" id="moods">
+          <button class="mood" data-m="0" aria-label="晴天">🌞</button>
+          <button class="mood" data-m="1" aria-label="开心">😊</button>
+          <button class="mood" data-m="2" aria-label="平静">😐</button>
+          <button class="mood" data-m="3" aria-label="累">🥱</button>
+          <button class="mood" data-m="4" aria-label="低落">🌧️</button>
+        </div>
+        <div class="lbl">想写点什么</div>
+        <div class="paper-area">
+          <textarea id="dText" placeholder="随便写。一句话也算。"></textarea>
+        </div>
+        <div class="things">
+          <div class="lbl">今天的三件小事</div>
+          <input id="th0" placeholder="一件小事…" maxlength="40">
+          <input id="th1" placeholder="一件小事…" maxlength="40">
+          <input id="th2" placeholder="一件小事…" maxlength="40">
+        </div>
+        <div class="dayfoot">
+          <div class="savehint" id="saveHint"></div>
+          <div class="flip">
+            <button id="prevD" aria-label="前一天">←</button>
+            <button id="homeD" class="home" aria-label="回月历">☰</button>
+            <button id="nextD" aria-label="后一天">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id)};
+var KEY='nikki_v1';
+var MOODS=['🌞','😊','😐','🥱','🌧️'];
+var WK=['日','一','二','三','四','五','六'];
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(e){return {}}}
+function save(d){try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+var store=load();
+var cur=null;           // 当前日页 yyyy-mm-dd
+var calY,calM;          // 月历年月
+var toastTimer=null;
+function toast(s){var t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},1800)}
+function ymd(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+function todayStr(){var n=new Date();return ymd(n.getFullYear(),n.getMonth(),n.getDate())}
+function parseKey(k){var a=k.split('-');return {y:+a[0],m:+a[1]-1,d:+a[2]}}
+function entry(k){if(!store[k])store[k]={mood:-1,text:'',things:['','','']};return store[k]}
+
+/* ---------- 视图切换 ---------- */
+function show(v){
+  ['cover','cal','day'].forEach(function(x){$(x).classList.toggle('on',x===v)});
+  window.scrollTo(0,0);
+}
+
+/* ---------- 封面 ---------- */
+$('openBook').addEventListener('click',function(){calY=new Date().getFullYear();calM=new Date().getMonth();renderCal();show('cal')});
+
+/* ---------- 月历 ---------- */
+function renderCal(){
+  $('monTitle').innerHTML=(calM+1)+'月 <small>'+calY+'</small>';
+  var first=new Date(calY,calM,1).getDay();
+  var dim=new Date(calY,calM+1,0).getDate();
+  var t=todayStr();
+  var html='';
+  for(var i=0;i<first;i++)html+='<div class="day blank"></div>';
+  var written=0,moods=[];
+  for(var d=1;d<=dim;d++){
+    var k=ymd(calY,calM,d);
+    var e=store[k];
+    var has=e&&(e.text||e.things&&e.things.join('')||(e.mood>=0));
+    var cls='day'+(k===t?' today':'')+(has?' written':'');
+    if(has){
+      written++;
+      if(e.mood>=0)moods.push(e.mood);
+      html+='<div class="'+cls+'" data-k="'+k+'">'+d+'<span class="dot" style="background:'+(e.mood>=0?'var(--red)':'var(--green)')+'"></span></div>';
+    }else{
+      html+='<div class="'+cls+'" data-k="'+k+'">'+d+'</div>';
+    }
+  }
+  $('grid').innerHTML=html;
+  $('stDays').textContent=written;
+  // 连续天数：从今天或昨天往回数
+  var streak=0,dt=new Date();
+  if(!store[ymd(dt.getFullYear(),dt.getMonth(),dt.getDate())])dt.setDate(dt.getDate()-1);
+  while(true){
+    var k2=ymd(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    var e2=store[k2];
+    if(e2&&(e2.text||e2.things&&e2.things.join('')||e2.mood>=0)){streak++;dt.setDate(dt.getDate()-1)}else break;
+  }
+  $('stStreak').textContent=streak;
+  $('stMood').textContent=moods.length?MOODS[mode(moods)]:'–';
+  Array.prototype.forEach.call($('grid').querySelectorAll('.day[data-k]'),function(el){
+    el.addEventListener('click',function(){openDay(el.getAttribute('data-k'))});
+  });
+}
+function mode(a){var c={};var best=a[0],bn=0;a.forEach(function(x){c[x]=(c[x]||0)+1;if(c[x]>bn){bn=c[x];best=x}});return best}
+$('prevM').addEventListener('click',function(){calM--;if(calM<0){calM=11;calY--}renderCal()});
+$('nextM').addEventListener('click',function(){calM++;if(calM>11){calM=0;calY++}renderCal()});
+$('btnToday').addEventListener('click',function(){openDay(todayStr())});
+
+/* ---------- 日页 ---------- */
+var dirtyTimer=null;
+function openDay(k){
+  cur=k;
+  var p=parseKey(k);
+  $('dBig').innerHTML=p.d+'<small>日</small>';
+  var dt=new Date(p.y,p.m,p.d);
+  $('dWk').textContent='星期'+WK[dt.getDay()]+' · '+(p.m+1)+'月'+(k===todayStr()?' · 今天':'');
+  var e=entry(k);
+  Array.prototype.forEach.call(document.querySelectorAll('.mood'),function(b){
+    b.classList.toggle('on',+b.getAttribute('data-m')===e.mood);
+  });
+  $('dText').value=e.text||'';
+  for(var i=0;i<3;i++)$('th'+i).value=(e.things&&e.things[i])||'';
+  $('saveHint').textContent='';
+  show('day');
+}
+function persist(silent){
+  var e=entry(cur);
+  e.text=$('dText').value;
+  e.things=[$('th0').value,$('th1').value,$('th2').value];
+  var has=e.text||e.things.join('')||e.mood>=0;
+  if(!has){delete store[cur]}else{e.savedAt=Date.now()}
+  save(store);
+  $('saveHint').textContent=has?'已自动存好 ✓':'';
+  if(!silent)toast(has?'存好了 🌱':'（空页不占地方）');
+}
+function onDirty(){
+  clearTimeout(dirtyTimer);
+  $('saveHint').textContent='写着…';
+  dirtyTimer=setTimeout(function(){persist(true)},900);
+}
+$('dText').addEventListener('input',onDirty);
+['th0','th1','th2'].forEach(function(id){$(id).addEventListener('input',onDirty)});
+Array.prototype.forEach.call(document.querySelectorAll('.mood'),function(b){
+  b.addEventListener('click',function(){
+    var e=entry(cur);var m=+b.getAttribute('data-m');
+    e.mood=(e.mood===m?-1:m);
+    Array.prototype.forEach.call(document.querySelectorAll('.mood'),function(x){
+      x.classList.toggle('on',+x.getAttribute('data-m')===e.mood);
+    });
+    if(e.mood>=0)toast('盖了 '+MOODS[e.mood]+' 章');
+    persist(true);
+  });
+});
+function shiftDay(n){
+  var p=parseKey(cur);var dt=new Date(p.y,p.m,p.d);dt.setDate(dt.getDate()+n);
+  persist(true);openDay(ymd(dt.getFullYear(),dt.getMonth(),dt.getDate()));
+}
+$('prevD').addEventListener('click',function(){shiftDay(-1)});
+$('nextD').addEventListener('click',function(){shiftDay(1)});
+$('homeD').addEventListener('click',function(){persist(true);renderCal();show('cal')});
+$('btnBack').addEventListener('click',function(){persist(true);renderCal();show('cal')});
+
+renderCal();
+})();
+</script>
+</body>
+</html>

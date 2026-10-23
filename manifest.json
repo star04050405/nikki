@@ -1,0 +1,13 @@
+{
+  "name": "nikki. 一本自己的小手账",
+  "short_name": "nikki.",
+  "description": "月历、心情印章、每天一页，写下的都留得住",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#FAF6EE",
+  "theme_color": "#C94F42",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
